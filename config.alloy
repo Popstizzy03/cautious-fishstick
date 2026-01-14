@@ -1,8 +1,8 @@
 discovery.relabel "nestjs" {
   targets = [{
-    __address__ = "rovioltacademyserver.onrender.com:443"
-    __metrics_path__ = "/api/metrics"
-    __scheme__ = "https"
+    __address__ = "rovioltacademyserver.onrender.com:443",
+    __metrics_path__ = "/api/metrics",
+    __scheme__ = "https",
   }]
 }
 
