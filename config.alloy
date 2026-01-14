@@ -1,0 +1,24 @@
+discovery.relabel "nestjs" {
+  targets = [{
+    __address__ = "rovioltacademyserver.onrender.com:443"
+    __metrics_path__ = "/api/metrics"
+    __scheme__ = "https"
+  }]
+}
+
+prometheus.scrape "nestjs" {
+  targets = discovery.relabel.nestjs.output
+  forward_to = [prometheus.remote_write.metrics_hosted_prometheus.receiver]
+  scrape_interval = "15s"
+}
+
+prometheus.remote_write "metrics_hosted_prometheus" {
+  endpoint {
+    name = "hosted-prometheus"
+    url  = "https://prometheus-prod-55-prod-gb-south-1.grafana.net/api/prom/push"
+    basic_auth {
+      username = "2854439"
+      password = env("GRAFANA_TOKEN")
+    }
+  }
+}
