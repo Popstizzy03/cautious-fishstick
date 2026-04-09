@@ -1,3 +1,4 @@
+// --- Metrics (Existing) ---
 discovery.relabel "nestjs" {
   targets = [{
     __address__ = "rovioltacademyserver.onrender.com:443",
@@ -18,6 +19,50 @@ prometheus.remote_write "metrics_hosted_prometheus" {
     url  = "https://prometheus-prod-55-prod-gb-south-1.grafana.net/api/prom/push"
     basic_auth {
       username = "2854439"
+      password = env("GRAFANA_TOKEN")
+    }
+  }
+}
+
+// --- Traces & Logs (OTLP Receiver) ---
+otelcol.receiver.otlp "default" {
+  grpc { endpoint = "0.0.0.0:4317" }
+  http { endpoint = "0.0.0.0:4318" }
+  output {
+    traces  = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    logs    = [otelcol.exporter.loki.default.input]
+  }
+}
+
+// --- Traces Exporter (Tempo) ---
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo-prod-04-prod-gb-south-1.grafana.net:443"
+    auth     = otelcol.auth.basic.grafana_cloud_tempo.handler
+  }
+}
+otelcol.auth.basic "grafana_cloud_tempo" {
+  username = "1423851" // Find your Tempo User ID in Grafana Cloud
+  password = env("GRAFANA_TOKEN")
+}
+
+// --- Logs Exporter (Loki) ---
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.grafana_cloud.receiver]
+}
+
+loki.write "grafana_cloud" {
+  endpoint {
+    url = "https://logs-prod-012.grafana.net/loki/api/v1/push"
+    basic_auth {
+      username = "1423851" // Find your Loki User ID in Grafana Cloud
       password = env("GRAFANA_TOKEN")
     }
   }
